@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notebook</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* --- YOUR CSS REMAINS 100% UNCHANGED --- */
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg-canvas: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --error: #ef4444;
+    --success: #22c55e;
+    --border: #e2e8f0;
+    --input-focus: #e0e7ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background-color:var(--bg-canvas);
+    background-image:radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size:24px 24px;
+    color:var(--text-main);
+}
+#auth-section{width:100%;max-width:420px;padding:20px;}
+.auth-card{
+    background:var(--card-bg);
+    padding:2.5rem;
+    border-radius:16px;
+    box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 
+               0 8px 10px -6px rgba(0,0,0,0.05),
+               0 0 0 1px rgba(0,0,0,0.02);
+    display:none;
+    animation:slideUp 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.auth-card.active{display:block;}
+@keyframes slideUp{
+    from{opacity:0;transform:translateY(20px);}
+    to{opacity:1;transform:translateY(0);}
+}
+.brand-header{text-align:center;margin-bottom:2rem;}
+.brand-header i{font-size:2rem;color:var(--primary);margin-bottom:10px;}
+.brand-header h2{font-size:1.5rem;font-weight:700;color:var(--text-main);letter-spacing:-0.025em;}
+.brand-header p{color:var(--text-muted);font-size:0.9rem;margin-top:4px;}
+.input-group{margin-bottom:1.25rem;}
+.input-group label{display:block;margin-bottom:6px;font-size:0.85rem;font-weight:600;color:var(--text-main);}
+.input-wrapper{position:relative;}
+.input-group input{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:0.95rem;
+    transition:all 0.2s;
+    background:#fdfdfd;
+}
+.input-group input::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+    font-weight: 500;
+}
+.input-group input:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px var(--input-focus);
+    background:#fff;
+}
+.password-toggle{
+    position:absolute;
+    right:14px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--text-muted);
+    cursor:pointer;
+    font-size:0.9rem;
+}
+.btn{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+.btn-primary{background:var(--primary);color:white;margin-top:10px;}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-ghost{background:transparent;color:var(--text-muted);margin-top:8px;font-size:0.85rem;}
+.btn-ghost:hover{color:var(--primary);background:#f1f5f9;}
+.auth-footer{margin-top:1.5rem;text-align:center;font-size:0.85rem;color:var(--text-muted);}
+.auth-footer a{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer;}
+.auth-footer a:hover{text-decoration:underline;}
+#otp-wrapper{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);display:none;}
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;}
+.toast{
+    background:#1e293b;
+    color:white;
+    padding:12px 20px;
+    border-radius:12px;
+    margin-top:8px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:0.9rem;
+    box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);
+    animation:toastIn 0.3s ease-out;
+}
+@keyframes toastIn{
+    from{transform:translateX(100%);opacity:0;}
+    to{transform:translateX(0);opacity:1;}
+}
+</style>
+</head>
+
+<body>
+
+<div id="toast-container"></div>
+
+<section id="auth-section">
+
+<!-- LOGIN -->
+<div id="login-card" class="auth-card active">
+    <div class="brand-header">
+        <i class="fa-solid fa-book-bookmark"></i>
+        <h2>Welcome Back</h2>
+        <p>Please enter your details to sign in</p>
+    </div>
+    <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="login-user" placeholder="..username">
+    </div>
+    <div class="input-group">
+        <label>Password</label>
+        <div class="input-wrapper">
+            <input type="password" id="login-pass" placeholder="••••••••">
+            <i class="fa fa-eye password-toggle" onclick="togglePassword('login-pass', this)"></i>
+        </div>
+    </div>
+    <div style="text-align:right;margin-bottom:20px;">
+        <a onclick="showView('forgot')" style="color:var(--primary);font-size:0.8rem;cursor:pointer;">Forgot password?</a>
+    </div>
+    <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+    <div class="auth-footer">
+        Don't have an account? <a onclick="showView('register')">Create one</a>
+    </div>
+</div>
+
+<!-- REGISTER -->
+<div id="register-card" class="auth-card">
+    <div class="brand-header">
+        <h2>Create Account</h2>
+        <p>Start your digital notebook today</p>
+    </div>
+    <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="reg-user" placeholder="..username">
+    </div>
+    <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="...@example.com">
+    </div>
+    <div class="input-group">
+        <label>Password</label>
+        <div class="input-wrapper">
+            <input type="password" id="reg-pass" placeholder="••••••••">
+            <i class="fa fa-eye password-toggle" onclick="togglePassword('reg-pass', this)"></i>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="handleRegister()">Register Account</button>
+    <button class="btn btn-ghost" onclick="showView('login')">Back to login</button>
+</div>
+
+<!-- FORGOT -->
+<div id="forgot-card" class="auth-card">
+    <div class="brand-header">
+        <h2>Reset Password</h2>
+        <p>We'll send a 6-digit code to your email</p>
+    </div>
+    <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="...@example.com">
+    </div>
+    <button id="send-otp-btn" class="btn btn-primary" onclick="handleForgot()">Send Reset Code</button>
+
+    <div id="otp-wrapper">
+        <div class="input-group">
+            <label>Verification Code</label>
+            <input type="text" id="otp-input" maxlength="6" style="text-align: center; letter-spacing: 4px; font-weight: bold;">
+        </div>
+        <button class="btn btn-primary" onclick="verifyOTP()">Verify OTP</button>
+    </div>
+
+    <button class="btn btn-ghost" onclick="showView('login')">Back to login</button>
+</div>
+
+<!-- RESET PASSWORD -->
+<div id="reset-card" class="auth-card">
+    <div class="brand-header">
+        <h2>Create New Password</h2>
+        <p>Enter your new password below</p>
+    </div>
+
+    <div class="input-group">
+        <label>New Password</label>
+        <div class="input-wrapper">
+            <input type="password" id="new-pass" placeholder="••••••••">
+            <i class="fa fa-eye password-toggle" onclick="togglePassword('new-pass', this)"></i>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>Confirm Password</label>
+        <div class="input-wrapper">
+            <input type="password" id="confirm-pass" placeholder="••••••••">
+            <i class="fa fa-eye password-toggle" onclick="togglePassword('confirm-pass', this)"></i>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="handleResetPassword()">Reset Password</button>
+    <button class="btn btn-ghost" onclick="showView('login')">Back to login</button>
+</div>
+</section>
+
+<script>
+
+/* ---------- TOAST SYSTEM ---------- */
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation';
+    const iconColor = type === 'success' ? '#22c55e' : '#ef4444';
+
+    toast.innerHTML = `
+        <i class="fa-solid ${icon}" style="color:${iconColor}"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        toast.style.transition = '0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+/* ---------- VIEW SWITCH ---------- */
+function showView(viewName) {
+    document.querySelectorAll('.auth-card')
+        .forEach(card => card.classList.remove('active'));
+
+    const selectedCard = document.getElementById(`${viewName}-card`);
+
+    if (!selectedCard) {
+        console.error("Card not found:", viewName);
+        return;
+    }
+
+    selectedCard.classList.add('active');
+
+    // Only reset OTP when going to login
+    if (viewName === "login") {
+        document.getElementById('otp-wrapper').style.display = 'none';
+        document.getElementById('send-otp-btn').style.display = 'flex';
+        document.getElementById('otp-input').value = "";
+    }
+}
+
+/* ---------- PASSWORD TOGGLE ---------- */
+function togglePassword(inputId, icon) {
+    const input = document.getElementById(inputId);
+    const isHidden = input.type === "password";
+
+    input.type = isHidden ? "text" : "password";
+    icon.className = isHidden
+        ? "fa fa-eye-slash password-toggle"
+        : "fa fa-eye password-toggle";
+}
+
+/* ---------- LOGIN ---------- */
+async function handleLogin() {
+    const username = document.getElementById('login-user').value.trim();
+    const password = document.getElementById('login-pass').value.trim();
+
+    if (!username || !password) {
+        showToast("Please fill all fields", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast("Login successful", "success");
+
+            // Store user
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            // Redirect
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 800);
+
+        } else {
+            showToast(data.message || "Invalid credentials", "error");
+        }
+
+    } catch (error) {
+        showToast("Server error", "error");
+        console.error(error);
+    }
+}
+async function handleResetPassword() {
+    const newPass = document.getElementById('new-pass').value.trim();
+    const confirmPass = document.getElementById('confirm-pass').value.trim();
+    const email = localStorage.getItem("resetEmail");
+
+    if (!newPass || !confirmPass) {
+        showToast("All fields required", "error");
+        return;
+    }
+
+    if (newPass !== confirmPass) {
+        showToast("Passwords do not match", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/reset-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, newPassword: newPass })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast("Password Reset Successful!", "success");
+            localStorage.removeItem("resetEmail");
+
+            setTimeout(() => {
+                showView('login');
+            }, 1000);
+        } else {
+            showToast(data.message || "Reset failed", "error");
+        }
+
+    } catch (error) {
+        showToast("Server error", "error");
+        console.error(error);
+    }
+}
+
+/* ---------- REGISTER ---------- */
+async function handleRegister() {
+    const username = document.getElementById('reg-user').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-pass').value.trim();
+
+    if (!username || !email || !password) {
+        showToast("All fields are required", "error");
+        return;
+    }
+
+    if (!email.includes("@")) {
+        showToast("Enter valid email", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast("Registration successful!", "success");
+            showView('login');
+        } else {
+            showToast(data.message || "Registration failed", "error");
+        }
+
+    } catch (error) {
+        showToast("Server not reachable", "error");
+        console.error(error);
+    }
+}
+
+/* ---------- SEND OTP ---------- */
+async function handleForgot() {
+    const email = document.getElementById('forgot-email').value.trim();
+
+    if (!email) {
+        showToast("Please enter your email", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast("OTP Sent Successfully!", "success");
+
+            // Show OTP section
+            document.getElementById('send-otp-btn').style.display = 'none';
+            document.getElementById('otp-wrapper').style.display = 'block';
+
+        } else {
+            showToast(data.message || "Failed to send OTP", "error");
+        }
+
+    } catch (error) {
+        showToast("Server error", "error");
+        console.error(error);
+    }
+}
+
+/* ---------- VERIFY OTP ---------- */
+async function verifyOTP() {
+    const email = document.getElementById('forgot-email').value.trim();
+    const otp = document.getElementById('otp-input').value.trim();
+
+    if (!otp) {
+        showToast("Enter OTP", "error");
+        return;
+    }
+
+    try {
+        const res = await fetch("/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+
+            showToast("OTP Verified Successfully!", "success");
+
+            // Store email temporarily
+            localStorage.setItem("resetEmail", email);
+
+            // 🔥 Switch UI inside same page
+            showView("reset");
+
+        } else {
+            showToast(data.message || "Invalid OTP", "error");
+        }
+
+    } catch (error) {
+        showToast("Server error", "error");
+        console.error(error);
+    }
+}
+
+</script>
+
+
+</body>
+</html>
