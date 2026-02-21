@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Notebook Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Sophisticated Color Palette */
+            --bg-canvas: #f3f4f6;
+            --bg-paper: #ffffff;
+            --bg-toolbar: rgba(255, 255, 255, 0.98);
+            
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            
+            --brand-color: #2563eb;
+            --brand-hover: #1d4ed8;
+            --brand-bg-subtle: #eff6ff;
+            
+            --danger-color: #ef4444;
+            --danger-hover: #fef2f2;
+            
+            --border-light: #e5e7eb;
+            --border-medium: #d1d5db;
+            
+            /* Modern Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-dropdown: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-paper: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            
+            /* Dimensions */
+            --a4-width: 210mm;
+            --a4-height: 297mm;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-pill: 9999px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            outline: none; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Sleek Toolbar --- */
+        .toolbar {
+            height: 64px;
+            background: var(--bg-toolbar);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: var(--shadow-sm);
+            z-index: 100;
+            position: relative;
+        }
+
+        .toolbar-left, .toolbar-center, .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Section dividers */
+        .divider {
+            width: 1px;
+            height: 28px;
+            background: var(--border-light);
+            margin: 0 4px;
+        }
+
+        /* Title Input */
+        .doc-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 12px;
+        }
+
+        .doc-icon {
+            color: var(--brand-color);
+            font-size: 20px;
+            background: var(--brand-bg-subtle);
+            padding: 8px;
+            border-radius: var(--radius-md);
+        }
+
+        .title-input {
+            border: 1px solid transparent;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            width: 200px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .title-input:hover { border-color: var(--border-light); }
+        .title-input:focus { 
+            border-color: var(--brand-color); 
+            background: var(--bg-paper);
+            box-shadow: 0 0 0 3px var(--brand-bg-subtle);
+        }
+
+        /* Tool Groups & Buttons */
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-canvas);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-tool {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .btn-tool:hover {
+            background-color: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .btn-tool.active {
+            background-color: var(--brand-bg-subtle);
+            color: var(--brand-color);
+        }
+
+        .zoom-display {
+            font-size: 13px;
+            font-weight: 500;
+            width: 48px;
+            text-align: center;
+            user-select: none;
+            color: var(--text-secondary);
+        }
+
+        /* Action Buttons (Right Side) */
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-paper);
+            color: var(--text-secondary);
+        }
+        
+        .btn-action:hover {
+            background: var(--bg-canvas);
+            color: var(--text-primary);
+        }
+
+        .btn-action.primary {
+            background: var(--brand-color);
+            color: white;
+            border-color: var(--brand-color);
+        }
+        .btn-action.primary:hover { background: var(--brand-hover); }
+
+        .btn-action.danger { color: var(--danger-color); border-color: transparent; padding: 8px 12px; }
+        .btn-action.danger:hover { background: var(--danger-hover); border-color: #fca5a5; }
+
+        /* --- Dropdowns --- */
+        .dropdown-wrapper { position: relative; }
+
+        .dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: var(--bg-paper);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-dropdown);
+            border-radius: var(--radius-md);
+            padding: 6px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            min-width: 160px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .dropdown.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        .dropdown-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+        .dropdown-item:hover { 
+            background: var(--bg-canvas); 
+            color: var(--text-primary);
+        }
+
+        /* Color Grid */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 8px;
+            min-width: 120px;
+        }
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        .swatch:hover { transform: scale(1.15); box-shadow: var(--shadow-sm); }
+
+        /* Helpers */
+        .dbl-hint {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        /* --- Workspace --- */
+        .workspace-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        /* Scrollbar Styling */
+        .workspace-container::-webkit-scrollbar { width: 10px; height: 10px; }
+        .workspace-container::-webkit-scrollbar-track { background: transparent; }
+        .workspace-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid var(--bg-canvas); }
+        .workspace-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .workspace-scaler {
+            transform-origin: top center;
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding-bottom: 100px;
+        }
+
+        .page {
+            width: var(--a4-width);
+            min-height: var(--a4-height);
+            background: var(--bg-paper);
+            box-shadow: var(--shadow-paper);
+            border: 1px solid var(--border-light);
+            border-radius: 2px;
+            padding: 25.4mm; /* Exact 1-inch margins */
+            font-size: 11pt; /* Professional doc standard */
+            font-family: Arial, sans-serif; /* Standard document font */
+            line-height: 1.6;
+            color: #000;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .page:focus-visible { outline: none; }
+        
+        /* Document Typography Details */
+        .page h1, .page h2, .page h3 { font-family: 'Inter', sans-serif; margin-bottom: 0.5em; color: var(--text-primary); }
+        .page p, .page ul, .page ol { margin-bottom: 1em; }
+        .page ul { padding-left: 1.5em; }
+
+        /* Add Page Button */
+        .btn-add-page {
+            background: var(--bg-paper);
+            color: var(--text-secondary);
+            border: 1px dashed var(--border-medium);
+            padding: 12px 32px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-add-page:hover { 
+            color: var(--brand-color);
+            border-color: var(--brand-color);
+            background: var(--brand-bg-subtle);
+            transform: translateY(-2px); 
+        }
+
+        /* --- Image Controls --- */
+        .img-container {
+            position: relative;
+            display: inline-block;
+            margin: 16px 0;
+            transition: all 0.2s;
+        }
+        .img-container.selected img {
+            outline: 3px solid var(--brand-color);
+            border-radius: 4px;
+            box-shadow: var(--shadow-md);
+        }
+        .img-overlay {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(17, 24, 39, 0.9);
+            backdrop-filter: blur(4px);
+            padding: 6px 8px;
+            border-radius: var(--radius-md);
+            display: none;
+            gap: 6px;
+            align-items: center;
+            box-shadow: var(--shadow-dropdown);
+            z-index: 50;
+        }
+        .img-container.selected .img-overlay { display: flex; animation: fadeIn 0.2s; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, 5px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+        .img-overlay button {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .img-overlay button:hover { background: rgba(255,255,255,0.2); }
+        .img-overlay .delete-img { color: #fca5a5; }
+        .img-overlay .delete-img:hover { background: rgba(239, 68, 68, 0.2); }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="doc-meta">
+                <i class="fas fa-file-lines doc-icon"></i>
+                <input type="text" class="title-input" value="Design Notes" placeholder="Untitled Document">
+            </div>
+        </div>
+
+        <div class="toolbar-center">
+            <div class="tool-group">
+                <button class="btn-tool" onclick="format('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                <button class="btn-tool" onclick="format('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                <button class="btn-tool" onclick="format('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                <button class="btn-tool" onclick="format('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+            </div>
+
+            <div class="tool-group dropdown-wrapper">
+                <button class="btn-tool" id="btn-highlight" ondblclick="toggleDropdown('color-menu')" onclick="applyLastColor()" title="Double-click for color">
+                    <i class="fas fa-highlighter"></i>
+                    <i class="fas fa-caret-down dbl-hint"></i>
+                </button>
+                <div id="color-menu" class="dropdown color-grid">
+                    <div class="swatch" style="background:#fef08a" onclick="setColor('#fef08a')"></div> 
+                    <div class="swatch" style="background:#bbf7d0" onclick="setColor('#bbf7d0')"></div> 
+                    <div class="swatch" style="background:#bae6fd" onclick="setColor('#bae6fd')"></div> 
+                    <div class="swatch" style="background:#fbcfe8" onclick="setColor('#fbcfe8')"></div>
+                    <div class="swatch" style="background:#e9d5ff" onclick="setColor('#e9d5ff')"></div>
+                    <div class="swatch" style="background:#fed7aa" onclick="setColor('#fed7aa')"></div>
+                    <div class="swatch" style="background:#fecaca" onclick="setColor('#fecaca')"></div>
+                    <div class="swatch" style="background:#e5e7eb" onclick="setColor('#e5e7eb')"></div>
+                </div>
+            </div>
+
+            <div class="tool-group dropdown-wrapper">
+                <button class="btn-tool" ondblclick="toggleDropdown('bullet-menu')" onclick="format('insertUnorderedList')" title="Double-click for bullet styles">
+                    <i class="fas fa-list-ul"></i>
+                    <i class="fas fa-caret-down dbl-hint"></i>
+                </button>
+                <div id="bullet-menu" class="dropdown">
+                    <div class="dropdown-item" onclick="insertSymbol('☐')"><i class="far fa-square"></i> Checkbox List</div>
+                    <div class="dropdown-item" onclick="insertSymbol('➤')"><i class="fas fa-arrow-right"></i> Arrow List</div>
+                    <div class="dropdown-item" onclick="insertSymbol('◆')"><i class="fas fa-gem"></i> Diamond List</div>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <input type="file" id="fileInput" hidden onchange="handleImageUpload(this)">
+                <button class="btn-tool" onclick="document.getElementById('fileInput').click()" title="Insert Image"><i class="far fa-image"></i></button>
+                <button class="btn-tool" onclick="addLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+            </div>
+
+            <div class="tool-group dropdown-wrapper">
+                <button class="btn-tool" onclick="toggleDropdown('font-menu')" title="Fonts">
+                    <i class="fas fa-font"></i>
+                </button>
+                <div id="font-menu" class="dropdown">
+                    <div class="dropdown-item" style="font-family: Arial" onclick="format('fontName', 'Arial')">Arial</div>
+                    <div class="dropdown-item" style="font-family: 'Times New Roman'" onclick="format('fontName', 'Times New Roman')">Times New Roman</div>
+                    <div class="dropdown-item" style="font-family: 'Courier New'" onclick="format('fontName', 'Courier New')">Courier New</div>
+                    <div class="dropdown-item" style="font-family: 'Georgia'" onclick="format('fontName', 'Georgia')">Georgia</div>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+
+            <div class="tool-group">
+                <button class="btn-tool" onclick="changeZoom(-0.1)" title="Zoom Out"><i class="fas fa-minus"></i></button>
+                <span class="zoom-display" id="zoomVal">100%</span>
+                <button class="btn-tool" onclick="changeZoom(0.1)" title="Zoom In"><i class="fas fa-plus"></i></button>
+            </div>
+        </div>
+
+        <div class="toolbar-right">
+            <div class="dropdown-wrapper">
+                <button class="btn-action" onclick="toggleDropdown('share-menu')">
+                    <i class="fas fa-share-nodes"></i> Share
+                </button>
+                <div id="share-menu" class="dropdown" style="right:0; left:auto; transform: translateY(10px);">
+                    <div class="dropdown-item" onclick="alert('Link Copied')"><i class="fas fa-link"></i> Copy Link</div>
+                    <div class="dropdown-item" onclick="window.open('mailto:?')"><i class="fas fa-envelope"></i> Email Document</div>
+                </div>
+            </div>
+            
+            <div class="dropdown-wrapper">
+                <button class="btn-action" onclick="toggleDropdown('dl-menu')">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <div id="dl-menu" class="dropdown" style="right:0; left:auto; transform: translateY(10px);">
+                    <div class="dropdown-item" onclick="alert('Downloading PDF...')"><i class="fas fa-file-pdf text-danger"></i> PDF Document</div>
+                    <div class="dropdown-item" onclick="alert('Downloading DOCX...')"><i class="fas fa-file-word text-brand"></i> Word (.docx)</div>
+                    <div class="dropdown-item" onclick="alert('Downloading TXT...')"><i class="fas fa-file-lines"></i> Plain Text</div>
+                </div>
+            </div>
+
+            <button class="btn-action primary" onclick="saveNote()">
+                <i class="fas fa-cloud-arrow-up"></i> Save
+            </button>
+
+            <div class="divider"></div>
+            
+            <button class="btn-action danger" onclick="deleteFile()" title="Clear Document"><i class="fas fa-trash"></i></button>
+        </div>
+    </div>
+
+    <div class="workspace-container" id="ws-container" onclick="deselectAll()">
+        <div class="workspace-scaler" id="scaler">
+            
+            <div class="page" contenteditable="true" id="page-1">
+                <h1>Project Proposal</h1>
+                <p>Welcome to your new modern editor. The interface has been completely redesigned for a premium writing experience.</p>
+                <ul>
+                    <li>Double-click the highlighter tool to select a custom background color.</li>
+                    <li>Use the smooth zooming feature to inspect document details.</li>
+                    <li>Click on inserted images to reveal the glassmorphic resize/delete overlay.</li>
+                </ul>
+            </div>
+
+            <button class="btn-add-page" onclick="addPage()">
+                <i class="fas fa-plus"></i> Add New Page
+            </button>
+
+        </div>
+    </div>
+
+<script>
+    /* ===============================
+       AUTH CHECK (UNCHANGED)
+    =============================== */
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user || !user.id) {
+        alert("Please login first");
+        window.location.href = "/";
+    }
+
+    /* ===============================
+       STATE
+    =============================== */
+    let currentZoom = 1.0;
+    let lastHighlightColor = '#fef08a';
+
+    /* ===============================
+       FORMAT FUNCTIONS
+    =============================== */
+    function format(cmd, val = null) {
+        document.execCommand(cmd, false, val);
+        closeAllDropdowns();
+    }
+
+    /* ===============================
+       DROPDOWN MANAGEMENT
+    =============================== */
+    function toggleDropdown(id) {
+        const menu = document.getElementById(id);
+        const isShown = menu.classList.contains('show');
+        closeAllDropdowns();
+        if (!isShown) {
+            menu.classList.add('show');
+        }
+        event.stopPropagation();
+    }
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.btn-tool') && !e.target.closest('.btn-action') && !e.target.closest('.dropdown-wrapper')) {
+            closeAllDropdowns();
+        }
+    });
+
+    /* ===============================
+       HIGHLIGHTER
+    =============================== */
+    function setColor(color) {
+        lastHighlightColor = color;
+        document.execCommand('hiliteColor', false, color);
+        closeAllDropdowns();
+    }
+
+    function applyLastColor() {
+        document.execCommand('hiliteColor', false, lastHighlightColor);
+    }
+
+    /* ===============================
+       ZOOM
+    =============================== */
+    function changeZoom(delta) {
+        currentZoom += delta;
+        if (currentZoom < 0.5) currentZoom = 0.5;
+        if (currentZoom > 1.5) currentZoom = 1.5;
+
+        const scaler = document.getElementById('scaler');
+        const display = document.getElementById('zoomVal');
+
+        scaler.style.transform = `scale(${currentZoom})`;
+        display.innerText = Math.round(currentZoom * 100) + '%';
+    }
+
+    /* ===============================
+       IMAGE HANDLING
+    =============================== */
+    function handleImageUpload(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const html = `
+                    <div class="img-container" contenteditable="false" onclick="selectImage(this, event)">
+                        <img src="${e.target.result}" style="max-width:100%; width:300px; display:block;">
+                        <div class="img-overlay">
+                            <button onclick="resizeImg(this, 1.1)" title="Increase Size"><i class="fas fa-magnifying-glass-plus"></i></button>
+                            <button onclick="resizeImg(this, 0.9)" title="Decrease Size"><i class="fas fa-magnifying-glass-minus"></i></button>
+                            <button class="delete-img" onclick="deleteImg(this)" title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                document.execCommand('insertHTML', false, html);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+        input.value = '';
+    }
+
+    function selectImage(container, e) {
+        deselectAll();
+        container.classList.add('selected');
+        e.stopPropagation();
+    }
+
+    function deselectAll() {
+        document.querySelectorAll('.img-container').forEach(c => c.classList.remove('selected'));
+    }
+
+    function resizeImg(btn, scale) {
+        const img = btn.closest('.img-container').querySelector('img');
+        img.style.width = (img.clientWidth * scale) + 'px';
+        event.stopPropagation();
+    }
+
+    function deleteImg(btn) {
+        btn.closest('.img-container').remove();
+    }
+
+    /* ===============================
+       PAGE MANAGEMENT
+    =============================== */
+    function addPage() {
+        const btn = document.querySelector('.btn-add-page');
+        const page = document.createElement('div');
+        page.className = 'page';
+        page.contentEditable = true;
+        page.innerHTML = '<p></p>';
+        document.getElementById('scaler').insertBefore(page, btn);
+        page.focus();
+    }
+
+    function insertSymbol(sym) {
+        const span = document.createElement('span');
+        span.innerText = sym + " ";
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.insertNode(span);
+            range.collapse(false);
+        }
+        closeAllDropdowns();
+    }
+
+    function addLink() {
+        const url = prompt("Enter URL:", "https://");
+        if (url) format('createLink', url);
+    }
+
+    function deleteFile() {
+        if (confirm("Are you sure? This will delete all content across all pages.")) {
+            document.querySelectorAll('.page').forEach(p => p.innerHTML = "<p><br></p>");
+        }
+    }
+
+    /* ===============================
+       SAVE NOTEBOOK (UNCHANGED)
+    =============================== */
+    function saveNote() {
+        console.log("Save button clicked");
+
+        const userData = localStorage.getItem("user");
+
+        if (!userData) {
+            alert("Please login first");
+            window.location.href = "/";
+            return;
+        }
+
+        const user = JSON.parse(userData);
+
+        const titleElement = document.querySelector(".title-input");
+        if (!titleElement) {
+            alert("Title input not found");
+            return;
+        }
+
+        const title = titleElement.value;
+        const pages = document.querySelectorAll(".page");
+        let fullContent = "";
+        
+        pages.forEach(page => {
+            fullContent += page.innerHTML;
+        });
+
+        fetch("/save_notebook", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                user_id: user.id,
+                title: title,
+                content: fullContent
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log("Server response:", data);
+            alert("Notebook Saved Successfully!");
+        })
+        .catch(err => {
+            console.error("Save error:", err);
+            alert("Error saving notebook");
+        });
+    }
+
+</script>
+</body>
+</html>
