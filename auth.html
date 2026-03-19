@@ -49,6 +49,15 @@ body{
 }
 .brand-header{text-align:center;margin-bottom:2rem;}
 .brand-header i{font-size:2rem;color:var(--primary);margin-bottom:10px;}
+
+/* Ensure logo stays a consistent size */
+.logo-img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    display: inline-block;
+}
+
 .brand-header h2{font-size:1.5rem;font-weight:700;color:var(--text-main);letter-spacing:-0.025em;}
 .brand-header p{color:var(--text-muted);font-size:0.9rem;margin-top:4px;}
 .input-group{margin-bottom:1.25rem;}
@@ -136,7 +145,7 @@ body{
 <!-- LOGIN -->
 <div id="login-card" class="auth-card active">
     <div class="brand-header">
-        <i class="fa-solid fa-book-bookmark"></i>
+            <img src="/static/images/Screenshot_2026-03-15_235627-removebg-preview.png" class="logo-img" alt="Notebook logo">
         <h2>Welcome Back</h2>
         <p>Please enter your details to sign in</p>
     </div>
