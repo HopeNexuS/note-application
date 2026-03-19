@@ -2,10 +2,13 @@ import os
 import random
 import datetime
 import requests
-from notebook_s import notebook_bp
+from notebook_s import notebook_bp, supabase
 from flask import Flask, render_template, request, jsonify
 from email_service import send_otp_email, send_welcome_email
 from dotenv import load_dotenv
+
+# register note blueprint so API endpoints are available
+from note import note_bp
 
 load_dotenv()
 
@@ -25,6 +28,7 @@ SUPABASE_HEADERS = {
 
 app = Flask(__name__, template_folder="template")
 app.register_blueprint(notebook_bp)
+app.register_blueprint(note_bp)  # add note routes
 
 # ==============================
 # ROUTES
@@ -40,7 +44,34 @@ def dashboard():
 
 @app.route("/editor")
 def editor():
-    return render_template("editor.html")
+    # When creating a new notebook, no ID should be provided.
+    # Use an empty string so the frontend does not treat it as a valid notebook id.
+    return render_template("editor.html", notebook_id="")
+
+@app.route("/quick_editor.html")
+def quick_editor():
+    # serve the quick note editor directly
+    return render_template("quick_editor.html")
+
+
+@app.route("/editor/<int:notebook_id>")
+def editor_with_id(notebook_id):
+    user_id = request.args.get("user_id")
+
+    builder = supabase.table("notebooks").select("*").eq("id", notebook_id)
+    if user_id:
+        builder = builder.eq("user_id", user_id)
+
+    response = builder.single().execute()
+
+    notebook = response.data
+
+    return render_template(
+        "editor.html",
+        notebook_id=notebook_id,
+        notebook=notebook
+    )
+
 
 # ==============================
 # REGISTER
@@ -155,12 +186,10 @@ def send_otp():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-
+@app.route("/verify-otp", methods=["POST"])
 # ==============================
 # VERIFY OTP
 # ==============================
-
-@app.route("/verify-otp", methods=["POST"])
 def verify_otp():
     data = request.get_json()
     email = data.get("email", "").strip()
@@ -172,7 +201,7 @@ def verify_otp():
     try:
         search_url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{email}&select=otp,otpexp,isotpused"
         res = requests.get(search_url, headers=SUPABASE_HEADERS)
-        users = res.json()
+        users = res.json() 
 
         if not users:
             return jsonify({"success": False, "message": "User not found"}), 404
