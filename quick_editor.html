@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Note</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #e8eaed;
+            --note-white: #ffffff;
+            --note-red: #f28b82;
+            --note-orange: #fbbc04;
+            --note-yellow: #fff475;
+            --note-green: #ccff90;
+            --note-teal: #a7ffeb;
+            --note-blue: #aecbfa;
+            --note-purple: #d7aefb;
+            --text-main: #202124;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+            margin: 0;
+        }
+
+        .note-card {
+            width: 100%;
+            max-width: 600px;
+            background: var(--note-white);
+            border-radius: 8px;
+            box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+            transition: background 0.3s ease, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: fit-content;
+        }
+
+        .note-card:hover {
+            box-shadow: 0 1px 3px 1px rgba(60, 64, 67, 0.2), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+        }
+
+        .header-input {
+            border: none;
+            background: transparent;
+            padding: 16px 16px 10px 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        /* Auto-expanding content area */
+        .content-area {
+            padding: 10px 16px 20px 16px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-main);
+            min-height: 120px;
+            outline: none;
+            word-wrap: break-word;
+        }
+
+        .content-area a {
+            color: #1a73e8;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* Toolbar */
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 12px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .note-card:hover .note-footer {
+            opacity: 1;
+        }
+
+        .footer-tools {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: rgba(95, 99, 104, 0.15);
+        }
+
+        .btn-done {
+            padding: 8px 24px;
+            background: transparent;
+            border: none;
+            font-weight: 600;
+            color: #3c4043;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn-done:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Color Palette */
+        .palette-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .color-menu {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 8px;
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .color-menu.show {
+            display: grid;
+        }
+
+        .swatch {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .swatch:hover {
+            border-color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="note-card" id="noteCard">
+        <input type="text" class="header-input" placeholder="Title" id="noteTitle">
+
+        <div class="content-area" contenteditable="true" id="noteContent" placeholder="Take a note..."></div>
+
+        <div class="note-footer">
+            <div class="footer-tools">
+                <div class="palette-dropdown">
+                    <button class="btn-icon" onclick="togglePalette()" title="Change color">
+                        <i class="fas fa-palette"></i>
+                    </button>
+                    <div class="color-menu" id="colorMenu">
+                        <div class="swatch" style="background: var(--note-white)"
+                            onclick="changeColor('var(--note-white)')"></div>
+                        <div class="swatch" style="background: var(--note-red)"
+                            onclick="changeColor('var(--note-red)')"></div>
+                        <div class="swatch" style="background: var(--note-orange)"
+                            onclick="changeColor('var(--note-orange)')"></div>
+                        <div class="swatch" style="background: var(--note-yellow)"
+                            onclick="changeColor('var(--note-yellow)')"></div>
+                        <div class="swatch" style="background: var(--note-green)"
+                            onclick="changeColor('var(--note-green)')"></div>
+                        <div class="swatch" style="background: var(--note-teal)"
+                            onclick="changeColor('var(--note-teal)')"></div>
+                        <div class="swatch" style="background: var(--note-blue)"
+                            onclick="changeColor('var(--note-blue)')"></div>
+                        <div class="swatch" style="background: var(--note-purple)"
+                            onclick="changeColor('var(--note-purple)')"></div>
+                    </div>
+                </div>
+                <button class="btn-icon" onclick="document.execCommand('bold')" title="Bold"><i
+                        class="fas fa-bold"></i></button>
+                <button class="btn-icon" id="checkBtn" title="Checklist">
+                    <i class="fas fa-check-square"></i>
+                </button>
+                <button class="btn-icon" onclick="clearNote()" title="Delete"><i class="fas fa-trash-can"></i></button>
+            </div>
+            <button class="btn-done" onclick="saveQuickNote()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const noteId = params.get("note_id");
+
+        function getCurrentUserId() {
+            const stored = localStorage.getItem('user');
+            if (!stored) return null;
+
+            let userData;
+            try {
+                userData = JSON.parse(stored);
+            } catch (e) {
+                return null;
+            }
+
+            if (!userData || typeof userData !== 'object') return null;
+            return userData.id ? String(userData.id) : null;
+        }
+
+        if (noteId) {
+            const userId = getCurrentUserId();
+            const noteUrl = userId ? `/notes/${noteId}?user_id=${encodeURIComponent(userId)}` : `/notes/${noteId}`;
+
+            fetch(noteUrl)
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.message || 'Failed to load note');
+                    }
+                    return data;
+                })
+                .then(note => {
+                    document.getElementById("noteTitle").value = note.title;
+                    document.getElementById("noteContent").innerHTML = note.content;
+                    // Apply saved note color if present
+                    if (note.note_color) {
+                        document.getElementById('noteCard').style.background = note.note_color;
+                    }
+                })
+                .catch(err => {
+                    console.error('Load failed', err);
+                    alert(err.message || 'Failed to load note');
+                });
+        }
+        // 1. Color Palette Toggle
+        function togglePalette() {
+            document.getElementById('colorMenu').classList.toggle('show');
+        }
+
+        function changeColor(color) {
+            document.getElementById('noteCard').style.background = color;
+            document.getElementById('colorMenu').classList.remove('show');
+        }
+
+        // 2. Clear Note
+        async function clearNote() {
+            if (!noteId) {
+                // just clear the form
+                if (confirm("Discard note?")) {
+                    document.getElementById('noteTitle').value = "";
+                    document.getElementById('noteContent').innerHTML = "";
+                    document.getElementById('noteCard').style.background = "var(--note-white)";
+                }
+                return;
+            }
+
+            // when editing an existing note, delete from backend
+            if (confirm("Delete this note permanently?")) {
+                try {
+                    const userId = getCurrentUserId();
+                    if (!userId) {
+                        alert('Please sign in again before deleting this note.');
+                        return;
+                    }
+
+                    const response = await fetch(`/notes/${noteId}?user_id=${encodeURIComponent(userId)}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Failed to delete note');
+                    }
+
+                    alert('Note deleted');
+                    window.location.href = '/dashboard';
+                } catch (err) {
+                    console.error('Delete failed', err);
+                    alert(err.message || 'Failed to delete note');
+                }
+            }
+        }
+
+        // 3. Auto-Linkify Feature
+        // This looks for URLs and converts them to clickable links when you stop typing
+        let timeout = null;
+        document.getElementById('noteContent').addEventListener('keyup', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                linkifyHTML();
+            }, 1500); // Trigger after 1.5s of no typing
+        });
+
+        function linkifyHTML() {
+            const content = document.getElementById('noteContent');
+            const selection = window.getSelection();
+            const offset = selection.focusOffset;
+
+            // Simple regex for http/https links
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            let html = content.innerHTML;
+
+            // Prevent infinite nesting by checking if already linked
+            if (html.includes('href') || !urlRegex.test(html)) return;
+
+            const newHtml = html.replace(urlRegex, function (url) {
+                return `<a href="${url}" target="_blank" contenteditable="false">${url}</a>`;
+            });
+
+            content.innerHTML = newHtml;
+        }
+
+        // 4. Save Logic (Mockup for your Dashboard)
+        function getNoteCardColor() {
+            const noteCard = document.getElementById('noteCard');
+            // Use computed style so we capture defaults set via CSS vars, not just inline styles.
+            const computed = window.getComputedStyle(noteCard).backgroundColor;
+            return computed || 'rgb(255, 255, 255)';
+        }
+
+        async function saveQuickNote() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').innerHTML;
+            const color = getNoteCardColor();
+
+            // attach current user id so notes are scoped correctly
+            const userId = getCurrentUserId();
+            const payloadBase = { notebook_id: null, title, content, note_color: color, user_id: userId };
+
+            try {
+                let resp;
+                if (noteId) {
+                    // editing existing note
+                    resp = await fetch(`/notes/${noteId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payloadBase)
+                    });
+                } else {
+                    resp = await fetch('/notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payloadBase)
+                    });
+                }
+
+                const data = await resp.json();
+                if (resp.ok) {
+                    alert('Note saved!');
+                    window.location.href = '/dashboard';
+                } else {
+                    alert('Error saving note: ' + (data.error || JSON.stringify(data)));
+                    console.error(data);
+                }
+            } catch (err) {
+                console.error('Network error', err);
+                alert('Network error while saving note');
+            }
+        }
+
+        // Close palette when clicking outside
+        window.onclick = function (event) {
+            if (!event.target.matches('.fa-palette') && !event.target.matches('.btn-icon')) {
+                document.getElementById('colorMenu').classList.remove('show');
+            }
+        }
+        // Insert Checkbox
+        document.getElementById("checkBtn").addEventListener("click", () => {
+
+            const checkboxHTML = `
+        <div class="check-item">
+            <input type="checkbox" class="note-checkbox">
+            <span contenteditable="true"> </span>
+        </div>
+    `;
+
+            noteContent.innerHTML += checkboxHTML;
+        });
+
+        // Handle strike-through when checked
+        noteContent.addEventListener("change", function (e) {
+            if (e.target.classList.contains("note-checkbox")) {
+                const text = e.target.nextElementSibling;
+                if (e.target.checked) {
+                    text.style.textDecoration = "line-through";
+                    text.style.opacity = "0.6";
+                } else {
+                    text.style.textDecoration = "none";
+                    text.style.opacity = "1";
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
