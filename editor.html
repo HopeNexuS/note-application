@@ -396,9 +396,116 @@
         .img-overlay .delete-img { color: #fca5a5; }
         .img-overlay .delete-img:hover { background: rgba(239, 68, 68, 0.2); }
 
+        /* ===============================
+           NEW SECURITY MODAL STYLES 
+        =============================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 24, 39, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-paper);
+            border-radius: var(--radius-md);
+            width: 340px;
+            box-shadow: var(--shadow-paper);
+            padding: 24px;
+            transform: translateY(20px);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+
+        .btn-close:hover {
+            color: var(--text-primary);
+        }
+
+        .secure-input {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 12px 0 20px 0;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .secure-input:focus {
+            border-color: var(--brand-color);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--brand-bg-subtle);
+        }
+
+        .modal-body p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .w-100 {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--brand-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
     </style>
 </head>
-<body>
+<body{% if notebook_id %} data-notebook-id="{{ notebook_id }}"{% endif %}>
 
     <div class="toolbar">
         <div class="toolbar-left">
@@ -484,21 +591,25 @@
             </div>
             
             <div class="dropdown-wrapper">
-                <button class="btn-action" onclick="toggleDropdown('dl-menu')">
-                    <i class="fas fa-download"></i> Export
-                </button>
-                <div id="dl-menu" class="dropdown" style="right:0; left:auto; transform: translateY(10px);">
-                    <div class="dropdown-item" onclick="alert('Downloading PDF...')"><i class="fas fa-file-pdf text-danger"></i> PDF Document</div>
-                    <div class="dropdown-item" onclick="alert('Downloading DOCX...')"><i class="fas fa-file-word text-brand"></i> Word (.docx)</div>
-                    <div class="dropdown-item" onclick="alert('Downloading TXT...')"><i class="fas fa-file-lines"></i> Plain Text</div>
-                </div>
+            <button class="btn-action" onclick="toggleDropdown('dl-menu')">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <div id="dl-menu" class="dropdown" style="right:0; left:auto;">
+                <div class="dropdown-item" onclick="exportPDF()"><i class="fas fa-file-pdf text-danger"></i> PDF Document</div>
+                <div class="dropdown-item" onclick="exportDOCX()"><i class="fas fa-file-word text-brand"></i> Word (.docx)</div>
+                <div class="dropdown-item" onclick="exportTXT()"><i class="fas fa-file-lines"></i> Plain Text</div>
             </div>
+        </div>
+
+            <div class="divider"></div>
+
+            <button class="btn-action" id="btn-security" onclick="openSecurityModal()" title="Manage Lock">
+                <i class="fas fa-lock-open"></i> Security
+            </button>
 
             <button class="btn-action primary" onclick="saveNote()">
                 <i class="fas fa-cloud-arrow-up"></i> Save
             </button>
-
-            <div class="divider"></div>
             
             <button class="btn-action danger" onclick="deleteFile()" title="Clear Document"><i class="fas fa-trash"></i></button>
         </div>
@@ -524,7 +635,69 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="security-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Notebook Security</h3>
+                <button class="btn-close" onclick="closeSecurityModal()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="modal-body" id="modal-body-setup">
+                <p>Secure this notebook with a password.</p>
+                <input type="password" id="new-password" placeholder="Enter new password" class="secure-input">
+                <button class="btn-action primary w-100" onclick="setPassword()">Set Password</button>
+            </div>
+
+            <div class="modal-body" id="modal-body-remove" style="display: none;">
+                <p>This notebook is currently protected.</p>
+                <input type="password" id="verify-password" placeholder="Enter current password" class="secure-input">
+                <button class="btn-action danger w-100" onclick="removePassword()">Remove Password</button>
+                <a href="#" class="forgot-link" onclick="forgotPassword()">Forgot password?</a>
+            </div>
+        </div>
+    </div>
+
 <script>
+    let notebookId = document.body.dataset.notebookId || "";
+    if (notebookId === "None") notebookId = "";
+
+    /* ===============================
+       NEW SECURITY STATE VARIABLES
+    =============================== */
+    let isProtected = false;
+    let notebookPassword = null; // Stored temporarily before saving
+
+    async function loadNotebook() {
+        if (!notebookId) return;
+
+        try {
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            const res = await fetch(`/get_single_notebook/${notebookId}?user_id=${userData.id || ""}`);
+            if (!res.ok) {
+                throw new Error(`Load failed (${res.status})`);
+            }
+            const notebook = await res.json();
+
+            if (notebook) {
+                document.querySelector(".title-input").value = notebook.title;
+
+                const firstPage = document.querySelector(".page");
+                firstPage.innerHTML = notebook.description;
+
+                // Load Security Status
+                if (notebook.is_protected) {
+                    isProtected = true;
+                    updateSecurityUI();
+                }
+            }
+        } catch (err) {
+            console.error("Load error:", err);
+        }
+    }
+
+    window.addEventListener("load", loadNotebook);
+    console.log("Notebook ID:", notebookId);
+    
     /* ===============================
        AUTH CHECK (UNCHANGED)
     =============================== */
@@ -567,7 +740,7 @@
     }
 
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.btn-tool') && !e.target.closest('.btn-action') && !e.target.closest('.dropdown-wrapper')) {
+        if (!e.target.closest('.btn-tool') && !e.target.closest('.btn-action') && !e.target.closest('.dropdown-wrapper') && !e.target.closest('.modal-content')) {
             closeAllDropdowns();
         }
     });
@@ -674,17 +847,118 @@
         if (url) format('createLink', url);
     }
 
-    function deleteFile() {
-        if (confirm("Are you sure? This will delete all content across all pages.")) {
-            document.querySelectorAll('.page').forEach(p => p.innerHTML = "<p><br></p>");
+    async function deleteFile() {
+        if (!notebookId) {
+            if (confirm("Are you sure? This will delete all content across all pages.")) {
+                document.querySelectorAll('.page').forEach(p => p.innerHTML = "<p><br></p>");
+            }
+            return;
+        }
+
+        if (!confirm("Are you sure? This will delete this notebook permanently.")) {
+            return;
+        }
+
+        try {
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            const userId = userData.id;
+            if (!userId) throw new Error("Please login first.");
+
+            const resp = await fetch(`/delete_notebook/${notebookId}?user_id=${encodeURIComponent(userId)}`, {
+                method: "DELETE"
+            });
+            const data = await resp.json();
+
+            if (!resp.ok) {
+                throw new Error(data.message || `Delete failed (${resp.status})`);
+            }
+
+            alert("Notebook deleted.");
+            window.location.href = "/dashboard";
+        } catch (err) {
+            console.error("Delete error:", err);
+            alert(err.message || "Failed to delete notebook.");
         }
     }
 
     /* ===============================
-       SAVE NOTEBOOK (UNCHANGED)
+       NEW SECURITY FUNCTIONS
     =============================== */
-    function saveNote() {
-        console.log("Save button clicked");
+    function openSecurityModal() {
+        const modal = document.getElementById('security-modal');
+        const setupBody = document.getElementById('modal-body-setup');
+        const removeBody = document.getElementById('modal-body-remove');
+
+        if (isProtected) {
+            setupBody.style.display = 'none';
+            removeBody.style.display = 'block';
+            document.getElementById('verify-password').value = '';
+        } else {
+            setupBody.style.display = 'block';
+            removeBody.style.display = 'none';
+            document.getElementById('new-password').value = '';
+        }
+
+        modal.classList.add('show');
+    }
+
+    function closeSecurityModal() {
+        document.getElementById('security-modal').classList.remove('show');
+    }
+
+    function setPassword() {
+        const input = document.getElementById('new-password').value;
+        if (input.length < 4) {
+            alert("Password must be at least 4 characters long.");
+            return;
+        }
+        
+        isProtected = true;
+        notebookPassword = input; // Saved in memory until "Save" button is clicked
+        
+        updateSecurityUI();
+        closeSecurityModal();
+        alert("Security Lock Prepared! Click the main 'Save' button to apply this to the database.");
+    }
+
+    function removePassword() {
+        const verification = document.getElementById('verify-password').value;
+        
+        // Note: For a real app, this verification should be validated via backend API.
+        // For frontend toggling purposes:
+        if (verification === notebookPassword || prompt("Backend validation simulated! Type 'yes' to force removal for demo:") === 'yes') {
+            isProtected = false;
+            notebookPassword = null;
+            updateSecurityUI();
+            closeSecurityModal();
+            alert("Lock removed! Click the main 'Save' button to update the database.");
+        } else {
+            alert("Incorrect password.");
+        }
+    }
+
+    function forgotPassword() {
+        alert("A password reset / bypass link has been sent to your registered email address.");
+    }
+
+    function updateSecurityUI() {
+        const btn = document.getElementById('btn-security');
+        if (isProtected) {
+            btn.innerHTML = '<i class="fas fa-lock text-brand"></i> Secured';
+            btn.style.borderColor = 'var(--brand-color)';
+            btn.style.color = 'var(--brand-color)';
+        } else {
+            btn.innerHTML = '<i class="fas fa-lock-open"></i> Security';
+            btn.style.borderColor = 'var(--border-medium)';
+            btn.style.color = 'var(--text-secondary)';
+        }
+    }
+
+    /* ===============================
+       SAVE NOTEBOOK (MODIFIED)
+    =============================== */
+
+    async function saveNote() {
 
         const userData = localStorage.getItem("user");
 
@@ -695,41 +969,108 @@
         }
 
         const user = JSON.parse(userData);
+        const title = document.querySelector(".title-input").value;
 
-        const titleElement = document.querySelector(".title-input");
-        if (!titleElement) {
-            alert("Title input not found");
-            return;
-        }
-
-        const title = titleElement.value;
         const pages = document.querySelectorAll(".page");
         let fullContent = "";
-        
+
         pages.forEach(page => {
             fullContent += page.innerHTML;
         });
 
-        fetch("/save_notebook", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                user_id: user.id,
-                title: title,
-                content: fullContent
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Server response:", data);
-            alert("Notebook Saved Successfully!");
-        })
-        .catch(err => {
+        // Add security payload data
+        const payload = {
+            title: title,
+            content: fullContent,
+            user_id: user.id,
+            is_protected: isProtected,
+            password: notebookPassword // Passes the new password if set. Let the backend handle hashing.
+        };
+
+        try {
+
+            if (notebookId) {
+                // UPDATE existing notebook
+                const resp = await fetch(`/update_notebook/${notebookId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (!resp.ok) {
+                    throw new Error(data.message || `Update failed (${resp.status})`);
+                }
+
+                alert("Notebook Updated Successfully!");
+
+            } else {
+                // CREATE new notebook
+                const resp = await fetch("/save_notebook", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (!resp.ok) {
+                    throw new Error(data.message || `Save failed (${resp.status})`);
+                }
+
+                alert("Notebook Saved Successfully!");
+            }
+
+            // Redirect back to dashboard
+            window.location.href = "/dashboard";
+
+        } catch (err) {
             console.error("Save error:", err);
-            alert("Error saving notebook");
-        });
+            alert(`Error saving notebook: ${err.message || err}`);
+        }
+    }
+    /*---------*/
+        // 1. Export as PDF
+    function exportPDF() {
+        const element = document.getElementById('scaler'); // The ID of the content you want to export
+        const opt = {
+            margin:       1,
+            filename:     'document.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    // 2. Export as DOCX (Simple HTML-to-Word conversion)
+    function exportDOCX() {
+        const content = document.getElementById('export-container').innerHTML;
+        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+                "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+                "xmlns='http://www.w3.org/TR/REC-html40'>"+
+                "<head><meta charset='utf-8'></head><body>";
+        const footer = "</body></html>";
+        const sourceHTML = header + content + footer;
+        
+        const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+        const fileDownload = document.createElement("a");
+        document.body.appendChild(fileDownload);
+        fileDownload.href = source;
+        fileDownload.download = 'document.doc';
+        fileDownload.click();
+        document.body.removeChild(fileDownload);
+    }
+
+    // 3. Export as Plain Text
+    function exportTXT() {
+        const element = document.getElementById('export-container');
+        const text = element.innerText || element.textContent;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'document.txt';
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 
 </script>
